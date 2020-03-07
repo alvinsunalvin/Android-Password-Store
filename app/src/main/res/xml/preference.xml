@@ -54,8 +54,8 @@
             android:key="pref_key_pwgen_type"
             android:title="@string/xkpwgen_pref_gentype_title"
             android:defaultValue="classic"
-            android:entries="@array/pwgen_provider"
-            android:entryValues="@array/pwgen_provider"
+            android:entries="@array/pwgen_provider_labels"
+            android:entryValues="@array/pwgen_provider_values"
             app:useSimpleSummaryProvider="true"
             android:persistent="true" />
         <androidx.preference.CheckBoxPreference
@@ -73,11 +73,11 @@
     <androidx.preference.PreferenceCategory android:title="@string/pref_general_title">
         <androidx.preference.EditTextPreference
             android:defaultValue="45"
-            android:dialogTitle="@string/pref_password_dialog_title"
+            android:dialogTitle="@string/pref_show_time_summary"
             android:inputType="number"
             android:key="general_show_time"
-            android:summary="@string/pref_password_dialog_title"
-            android:title="@string/pref_password_title" />
+            android:summary="@string/pref_show_time_summary"
+            android:title="@string/pref_show_time_title" />
         <androidx.preference.CheckBoxPreference
             android:defaultValue="true"
             android:title="@string/show_password_pref_title"

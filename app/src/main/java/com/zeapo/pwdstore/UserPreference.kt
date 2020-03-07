@@ -87,6 +87,7 @@ class UserPreference : AppCompatActivity() {
             val keyPreference = findPreference<Preference>("openpgp_key_id_pref")
 
             // General preferences
+            val showTimePreference = findPreference<Preference>("general_show_time")
             val clearAfterCopyPreference = findPreference<CheckBoxPreference>("clear_after_copy")
             val clearClipboard20xPreference = findPreference<CheckBoxPreference>("clear_clipboard_20x")
 
@@ -115,7 +116,7 @@ class UserPreference : AppCompatActivity() {
             clearAfterCopyPreference?.isVisible = sharedPreferences.getString("general_show_time", "45")?.toInt() != 0
             clearClipboard20xPreference?.isVisible = sharedPreferences.getString("general_show_time", "45")?.toInt() != 0
             val selectedKeys = (sharedPreferences.getStringSet("openpgp_key_ids_set", null)
-                    ?: HashSet<String>()).toTypedArray()
+                    ?: HashSet()).toTypedArray()
             keyPreference?.summary = if (selectedKeys.isEmpty()) {
                 this.resources.getString(R.string.pref_no_key_selected)
             } else {
@@ -269,17 +270,20 @@ class UserPreference : AppCompatActivity() {
                 }
             }
 
-            findPreference<Preference>("general_show_time")?.onPreferenceChangeListener =
-                    ChangeListener { _, newValue: Any? ->
-                        try {
-                            val isEnabled = newValue.toString().toInt() != 0
-                            clearAfterCopyPreference?.isVisible = isEnabled
-                            clearClipboard20xPreference?.isVisible = isEnabled
-                            true
-                        } catch (e: NumberFormatException) {
-                            false
-                        }
-                    }
+            showTimePreference?.onPreferenceChangeListener = ChangeListener { _, newValue: Any? ->
+                try {
+                    val isEnabled = newValue.toString().toInt() != 0
+                    clearAfterCopyPreference?.isVisible = isEnabled
+                    clearClipboard20xPreference?.isVisible = isEnabled
+                    true
+                } catch (e: NumberFormatException) {
+                    false
+                }
+            }
+
+            showTimePreference?.summaryProvider = Preference.SummaryProvider<Preference> {
+                getString(R.string.pref_show_time_summary, sharedPreferences.getString("general_show_time", "45"))
+            }
 
             findPreference<SwitchPreferenceCompat>("biometric_auth")?.apply {
                 val isFingerprintSupported = BiometricManager.from(requireContext()).canAuthenticate() == BiometricManager.BIOMETRIC_SUCCESS
@@ -332,12 +336,12 @@ class UserPreference : AppCompatActivity() {
             val prefPwgenType = findPreference<ListPreference>("pref_key_pwgen_type")
             showHideDependentPrefs(prefPwgenType?.value, prefIsCustomDict, prefCustomDictPicker)
 
-            prefPwgenType?.onPreferenceChangeListener = ChangeListener() { _, newValue ->
+            prefPwgenType?.onPreferenceChangeListener = ChangeListener { _, newValue ->
                 showHideDependentPrefs(newValue, prefIsCustomDict, prefCustomDictPicker)
                 true
             }
 
-            prefIsCustomDict?.onPreferenceChangeListener = ChangeListener() { _, newValue ->
+            prefIsCustomDict?.onPreferenceChangeListener = ChangeListener { _, newValue ->
                 if (!(newValue as Boolean)) {
                     val customDictFile = File(context.filesDir, XkpwdDictionary.XKPWD_CUSTOM_DICT_FILE)
                     if (customDictFile.exists()) {
@@ -540,7 +544,7 @@ class UserPreference : AppCompatActivity() {
                     // TODO: This is fragile. Workaround until PasswordItem is backed by DocumentFile
                     val docId = DocumentsContract.getTreeDocumentId(uri)
                     val split = docId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                    val path = if (split.size > 0) split[1] else split[0]
+                    val path = if (split.isNotEmpty()) split[1] else split[0]
                     val repoPath = "${Environment.getExternalStorageDirectory()}/$path"
 
                     Timber.tag(TAG).d("Selected repository path is $repoPath")
@@ -688,7 +692,7 @@ class UserPreference : AppCompatActivity() {
         @JvmStatic
         private fun setCustomDictSummary(customDictPref: Preference?, uri: Uri) {
             val fileName = uri.path?.substring(uri.path?.lastIndexOf(":")!! + 1)
-            customDictPref?.setSummary("Selected dictionary: " + fileName)
+            customDictPref?.summary = "Selected dictionary: $fileName"
         }
     }
 }
